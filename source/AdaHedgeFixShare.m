@@ -1,4 +1,4 @@
-function h = AdaHedge_FixShare(l, alpha)
+function h = AdaHedgeFixShare(l, alpha)
     [T, K] = size(l);
     h = nan(T,1);
     L = zeros(1, K);
