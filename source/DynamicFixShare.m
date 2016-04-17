@@ -15,5 +15,9 @@ function h = DynamicFixShare(l, alpha)
             L(t,:) = l(t,:);
         end
         Delta = Delta + delta;
+        
+        if mod(t, 200) == 0
+            t
+        end
     end
 end
