@@ -2,7 +2,6 @@ function [s, S]  = get_losses(input_path, indexes)
     input = csvread(input_path, 1, 2);
     T = length(input);
     input = input(1:T, indexes);
-
     V = zeros(T, 1); % V(t)    volume of game on step t
     C = zeros(T, 2); % C(t, i) fund/capital of  i-th expert on step t
     s = zeros(T, 2); % s(t, i) loss of  i-th expert on step t
@@ -27,4 +26,12 @@ function [s, S]  = get_losses(input_path, indexes)
         V(t+1) = V(t) + max(s(t,:));
 
     end
+    s = s/max(max(s));
+    for t = 1:T-1    
+        S(t, 1) = sum(s(1:t, 1));
+        S(t, 2) = sum(s(1:t, 2));
+    end
+    
+    
+    
 end

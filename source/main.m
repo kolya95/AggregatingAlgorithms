@@ -2,14 +2,14 @@
 save = 1;
 rewrite = 1;
 path_to_input_directory = ('../input_files/');
-path_to_outut = '../output/';
+path_to_outut = '../output/last';
 indexes = [3]; % indexes of columns, which used
 input_files = dir(fullfile(path_to_input_directory,'*.csv'));
 aggregating_algorithms_list = {
-    {@AdaHedgeFixShare, {0}, {'AH'}} % 0 means, that it is pure adahedge
-    {@ConstantFixShare, {0.03, 0.05}, {'CFS'}} % eta = 0.1, alpha = 0.05
+    {@AdaHedge, {}, {'AHF'}} % 0 means, that it is pure adahedge
+    {@ConstantFixShare, {0.03, 0.01}, {'CFS'}} % eta = 0.1, alpha = 0.05
     {@DynamicFixShare, {0.05}, {'DFS'}} % alpha=0.05
-    %{@DynamicFixShareModified, {0.05}, {'MDFS'}}  % alpha=0.05
+    {@VariableShare, {0.03, 0.01}, {'VS'}}
     };
 
 %%% run
@@ -18,10 +18,12 @@ for file = 1:length(input_files)
 
     
     [s, S] = get_losses(input_path, indexes); % get losses, and cumulative losses
-    T = length(s);
+    T = length(s);%min(length(s), 1000);
     
     cumulative_losses = zeros(numel(aggregating_algorithms_list), T);
     for alg_index = 1:numel(aggregating_algorithms_list)
+        aggregating_algorithms_list{alg_index}{3}
+
         func = aggregating_algorithms_list{alg_index}{1};
         arg = [{s(1:T, :)}, aggregating_algorithms_list{alg_index}{2}{:}];
         ml =  func(arg{:});
@@ -30,7 +32,6 @@ for file = 1:length(input_files)
             cml(i) = sum(ml(1:i));
         end
         cumulative_losses(alg_index, :) = cml;
-        aggregating_algorithms_list{alg_index}{3}
     end
 
 %%% plots    
@@ -40,11 +41,14 @@ for file = 1:length(input_files)
     plot(1:T, -S(1:T, 2), 'g', 'DisplayName', '2 expert');    
     for alg_index = 1:numel(aggregating_algorithms_list)
         name = aggregating_algorithms_list{alg_index}{3};
-        args_str = strcat('(', num2str(arg{2}));
-        for arg_index = 3:length(arg)
-            args_str = strcat(args_str, ',', num2str(arg{arg_index}));
+        args_str = '';
+        if length(arg) > 1
+            args_str = strcat('(', num2str(arg{2}));
+            for arg_index = 3:length(arg)
+                args_str = strcat(args_str, ',', num2str(arg{arg_index}));
+            end
+            args_str = strcat(args_str, ')');
         end
-        args_str = strcat(args_str, ')');
         legend_name = strcat(name, args_str);
         plot(1:T, -cumulative_losses(alg_index, 1:T), 'DisplayName', legend_name{1});
     end
